@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CarListCreateView, CarRetrieveUpdateDestroyView,create_admin
+from .views import CarListCreateView, CarRetrieveUpdateDestroyView
 
 urlpatterns = [
     path('cars/', CarListCreateView.as_view(), name='car-list-create'),
