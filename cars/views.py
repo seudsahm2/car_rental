@@ -18,11 +18,11 @@ class CarRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     
 
 #temporary admin creation view
-# from django.contrib.auth.models import User
-# from django.http import HttpResponse
+from django.contrib.auth.models import User
+from django.http import HttpResponse
 
-# def create_admin(request):
-#     if not User.objects.filter(username='adminuser').exists():
-#         User.objects.create_superuser('adminuser', 'admin@example.com', 'yourpassword123')
-#         return HttpResponse("Admin user created")
-#     return HttpResponse("Admin user already exists")
+def create_admin(request):
+    if not User.objects.filter(username='adminuser').exists():
+        User.objects.create_superuser('adminuser', 'admin@example.com', 'yourpassword123')
+        return HttpResponse("Admin user created")
+    return HttpResponse("Admin user already exists")
