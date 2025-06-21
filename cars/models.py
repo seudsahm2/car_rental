@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.html import format_html
 
 class Car(models.Model):
     CATEGORY_CHOICES = [
@@ -9,7 +10,7 @@ class Car(models.Model):
     ]
     
     title = models.CharField(max_length=200)
-    image = models.URLField(max_length=500)
+    image = models.ImageField(upload_to='cars/', blank=True, null=True)
     price = models.CharField(max_length=50)
     year = models.CharField(max_length=10)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
@@ -22,3 +23,11 @@ class Car(models.Model):
 
     def __str__(self):
         return self.title
+
+    def image_preview(self):
+        if self.image:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', self.image.url)
+        elif self.image_url:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', self.image_url)
+        return "No Image"
+    image_preview.short_description = 'Preview'

@@ -4,7 +4,7 @@ from .serializers import CarSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-class CarListCreateView(generics.ListCreateAPIView):
+class CarListCreateView(generics.ListAPIView):
     queryset = Car.objects.all()
     serializer_class = CarSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
