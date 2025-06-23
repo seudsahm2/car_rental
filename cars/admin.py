@@ -1,65 +1,89 @@
-from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Car
+from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection
 
-class CarAdminForm(forms.ModelForm):
-    features_input = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 3}),
-        help_text="Enter one feature per line",
-        required=False
-    )
-    
-    class Meta:
-        model = Car
-        fields = '__all__'
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.features:
-            self.initial['features_input'] = "\n".join(self.instance.features)
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        features = self.cleaned_data['features_input'].split("\n")
-        instance.features = [f.strip() for f in features if f.strip()]
-        if commit:
-            instance.save()
-        return instance
+# Inline for FAQs under FAQCategory
+class FAQInline(admin.TabularInline):
+    model = FAQ
+    extra = 1
+    fields = ['question', 'answer', 'slug', 'order']
+    prepopulated_fields = {'slug': ('question',)}
+    ordering = ['order']
 
-@admin.register(Car)
-class CarAdmin(admin.ModelAdmin):
-    form = CarAdminForm
-    list_display = ('title', 'price', 'year', 'category', 'available', 'image_preview')
-    list_filter = ('category', 'available')
-    search_fields = ('title', 'features')
-    list_editable = ('available',)
-    readonly_fields = ('image_preview',)
+@admin.register(CarCategory)
+class CarCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug']
+    search_fields = ['name']
+    prepopulated_fields = {'slug': ('name',)}
+    list_filter = ['name']
     
     fieldsets = (
         (None, {
-            'fields': ('title', 'price', 'year', 'category', 'features_input')
-        }),
-        ('Contact Information', {
-            'fields': ('whatsapp_number', 'call_number')
-        }),
-        ('Images', {
-            'fields': ('image', 'image_preview')
-        }),
-        ('Status', {
-            'fields': ('available',)
+            'fields': ('name', 'slug')
         }),
     )
 
+@admin.register(Car)
+class CarAdmin(admin.ModelAdmin):
+    list_display = ['make', 'model', 'year', 'category', 'daily_rate', 'image_preview', 'no_security_deposit', 'whatsapp_deal']
+    list_filter = ['category', 'year', 'insurance_included', 'usdt_accepted', 'no_security_deposit']
+    search_fields = ['make', 'model', 'description']
+    prepopulated_fields = {'slug': ('make', 'model', 'year')}
+    list_editable = ['daily_rate', 'no_security_deposit', 'whatsapp_deal']
+    list_per_page = 20
+    
+    fieldsets = (
+        (None, {
+            'fields': ('make', 'model', 'year', 'category', 'daily_rate', 'slug')
+        }),
+        ('Details', {
+            'fields': ('description', 'seats', 'image')
+        }),
+        ('Features', {
+            'fields': ('insurance_included', 'usdt_accepted', 'whatsapp_deal', 'no_security_deposit')
+        }),
+    )
+    
+    readonly_fields = ['image_preview']
+    
     def image_preview(self, obj):
         if obj.image:
-            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', obj.image.url)
+            return format_html('<img src="{}" style="max-height: 100px;" />', obj.image.url)
         return "No Image"
-    image_preview.short_description = 'Preview'
+    image_preview.short_description = 'Image'
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # Remove the original features field from the form since we're using features_input
-        if 'features' in form.base_fields:
-            del form.base_fields['features']
-        return form
+@admin.register(FAQCategory)
+class FAQCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug']
+    search_fields = ['name']
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [FAQInline]
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ['question', 'category', 'order']
+    list_filter = ['category']
+    search_fields = ['question', 'answer']
+    prepopulated_fields = {'slug': ('question',)}
+    list_editable = ['order']
+    list_per_page = 20
+    
+    fieldsets = (
+        (None, {
+            'fields': ('question', 'answer', 'category', 'slug', 'order')
+        }),
+    )
+
+
+@admin.register(ContentSection)
+class ContentSectionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'page', 'order']
+    list_filter = ['page']
+    search_fields = ['title', 'content']
+    prepopulated_fields = {'slug': ('title',)}
+    list_editable = ['order']
+    list_per_page = 20
+    
+    fieldsets = (
+        (None, {'fields': ('title', 'content', 'page', 'slug', 'order')}),
+    )

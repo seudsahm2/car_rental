@@ -1,33 +1,102 @@
 from django.db import models
+from django.utils.text import slugify
+from rest_framework import generics, filters
+from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import serializers
+from django.contrib import admin
 from django.utils.html import format_html
+# Models
+class CarCategory(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name
 
 class Car(models.Model):
-    CATEGORY_CHOICES = [
-        ('LUXURY', 'Luxury'),
-        ('SPORTS', 'Sports'),
-        ('SUV', 'SUV'),
-        ('CONVERTIBLE', 'Convertible'),
-    ]
-    
-    title = models.CharField(max_length=200)
-    image = models.ImageField(upload_to='cars/', blank=True, null=True)
-    price = models.CharField(max_length=50)
-    year = models.CharField(max_length=10)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    features = models.JSONField(default=list)
-    whatsapp_number = models.CharField(max_length=20, default='+1234567890')
-    call_number = models.CharField(max_length=20, default='+1234567890')
-    available = models.BooleanField(default=True)
+    make = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+    year = models.PositiveIntegerField()
+    category = models.ForeignKey(CarCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to='car_images/')
+    description = models.TextField(blank=True)
+    seats = models.PositiveIntegerField()
+    insurance_included = models.BooleanField(default=True)
+    usdt_accepted = models.BooleanField(default=True)
+    whatsapp_deal = models.BooleanField(default=True)
+    no_security_deposit = models.BooleanField(default=True)  # Added to reflect no-deposit policy
+    slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(f"{self.make} {self.model} {self.year}")
+            self.slug = base_slug
+            counter = 1
+            while Car.objects.filter(slug=self.slug).exists():
+                self.slug = f"{base_slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.make} {self.model} {self.year}"
 
+class FAQCategory(models.Model):  # New model for FAQ categories
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name
+
+class FAQ(models.Model):    
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    category = models.ForeignKey(FAQCategory, on_delete=models.SET_NULL, null=True, blank=True)  # Updated to use ForeignKey
+    slug = models.SlugField(unique=True, blank=True)  # Added for SEO
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.question)
+            counter = 1
+            while FAQ.objects.filter(slug=self.slug).exists():
+                self.slug = f"{self.slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.question
+    
+class ContentSection(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    slug = models.SlugField(unique=True, blank=True)
+    page = models.CharField(max_length=100, default='luxury')  # e.g., 'luxury', 'sports'
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return self.title
-
-    def image_preview(self):
-        if self.image:
-            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', self.image.url)
-        elif self.image_url:
-            return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />', self.image_url)
-        return "No Image"
-    image_preview.short_description = 'Preview'

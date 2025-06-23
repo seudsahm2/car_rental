@@ -1,28 +1,59 @@
-from rest_framework import generics
-from .models import Car
-from .serializers import CarSerializer
-from rest_framework.filters import SearchFilter, OrderingFilter
+# cars/views.py
+
+from rest_framework import generics, filters
+from .models import Car, CarCategory,FAQ,ContentSection
+from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-
-class CarListCreateView(generics.ListAPIView):
-    queryset = Car.objects.all()
+from rest_framework.permissions import AllowAny
+# Views
+class CarListView(generics.ListAPIView):
     serializer_class = CarSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['category', 'available']
-    search_fields = ['title', 'features']
-    ordering_fields = ['price', 'year']
-
-class CarRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Car.objects.all()
-    serializer_class = CarSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['category__slug', 'make', 'year']  # Enhanced filtering
+    ordering_fields = ['daily_rate', 'year', 'make', 'created_at']
+    ordering = ['-created_at']
+    search_fields = ['make', 'model', 'description']  # Added search fields
     
+    def get_queryset(self):
+        queryset = Car.objects.all()
+        return queryset
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
-#temporary admin creation view
-from django.contrib.auth.models import User
-from django.http import HttpResponse
+class CarCategoryListView(generics.ListAPIView):
+    queryset = CarCategory.objects.all()
+    serializer_class = CarCategorySerializer
+    permission_classes = [AllowAny]
 
-def create_admin(request):
-    if not User.objects.filter(username='adminuser').exists():
-        User.objects.create_superuser('seud', 'seudsahm1@gmail.com', '12345678')
-        return HttpResponse("Admin user created")
-    return HttpResponse("Admin user already exists")
+class FAQListView(generics.ListAPIView):
+    serializer_class = FAQSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['category__slug']  # Filter by category slug
+    ordering_fields = ['order', 'question']
+    ordering = ['order']
+    
+    def get_queryset(self):
+        queryset = FAQ.objects.all()
+        # Optional: Filter by search query
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                models.Q(question__icontains=search_query) |
+                models.Q(answer__icontains=search_query)
+            )
+        return queryset
+
+class ContentSectionListView(generics.ListAPIView):
+    serializer_class = ContentSectionSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['page']
+    
+    def get_queryset(self):
+        queryset = ContentSection.objects.all()
+        return queryset
