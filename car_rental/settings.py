@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_SECRET_KEY = 'django-insecure-' + os.urandom(50).hex()  # 50+ character random key
 SECRET_KEY = os.getenv('SECRET_KEY', DEFAULT_SECRET_KEY)
 
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 if DEBUG:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']

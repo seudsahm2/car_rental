@@ -57,3 +57,9 @@ class ContentSectionListView(generics.ListAPIView):
     def get_queryset(self):
         queryset = ContentSection.objects.all()
         return queryset
+    
+def create_admin(request):
+    if not User.objects.filter(username='seud').exists():
+        User.objects.create_superuser('seud', 'seudsahm1@gmail.com', '12345678')
+        return HttpResponse("Admin user created")
+    return HttpResponse("Admin user already exists")
