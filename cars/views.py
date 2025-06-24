@@ -5,6 +5,8 @@ from .models import Car, CarCategory,FAQ,ContentSection
 from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
+from django.http import HttpResponse
+from django.contrib.auth.models import User
 # Views
 class CarListView(generics.ListAPIView):
     serializer_class = CarSerializer
