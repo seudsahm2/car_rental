@@ -6,16 +6,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from django.contrib import admin
 from django.utils.html import format_html
-# Models
+
+
 class CarCategory(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
-    
+
     def __str__(self):
         return self.name
 
@@ -25,17 +26,17 @@ class Car(models.Model):
     year = models.PositiveIntegerField()
     category = models.ForeignKey(CarCategory, on_delete=models.SET_NULL, null=True, blank=True)
     daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='car_images/')
+    image_path = models.CharField(max_length=255, blank=True, null=True)  # Store Supabase file path
     description = models.TextField(blank=True)
     seats = models.PositiveIntegerField()
     insurance_included = models.BooleanField(default=True)
     usdt_accepted = models.BooleanField(default=True)
     whatsapp_deal = models.BooleanField(default=True)
-    no_security_deposit = models.BooleanField(default=True)  # Added to reflect no-deposit policy
+    no_security_deposit = models.BooleanField(default=True)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(f"{self.make} {self.model} {self.year}")
@@ -45,9 +46,9 @@ class Car(models.Model):
                 self.slug = f"{base_slug}-{counter}"
                 counter += 1
         super().save(*args, **kwargs)
-    
+
     def __str__(self):
-        return f"{self.make} {self.model} {self.year}"
+        return f"{self.make} {self.model} ({self.year})"
 
 class FAQCategory(models.Model):  # New model for FAQ categories
     name = models.CharField(max_length=100)

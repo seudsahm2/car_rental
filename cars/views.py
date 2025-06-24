@@ -7,20 +7,22 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
 from django.contrib.auth.models import User
+from .utils.supabase_client import get_supabase_client
 # Views
 class CarListView(generics.ListAPIView):
     serializer_class = CarSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_fields = ['category__slug', 'make', 'year']  # Enhanced filtering
+    filterset_fields = ['category__slug', 'make', 'year']
     ordering_fields = ['daily_rate', 'year', 'make', 'created_at']
     ordering = ['-created_at']
-    search_fields = ['make', 'model', 'description']  # Added search fields
-    
+    search_fields = ['make', 'model', 'description']
+
     def get_queryset(self):
-        queryset = Car.objects.all()
-        return queryset
-    
+        supabase = get_supabase_client()
+        response = supabase.table('cars').select('*').execute()
+        return response.data  # Return Supabase data as queryset
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
