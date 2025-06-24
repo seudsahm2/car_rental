@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo,AdUnit
 from .utils.supabase_client import get_supabase_client
 from django import forms
+from django.conf import settings
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
     model = FAQ
