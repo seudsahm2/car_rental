@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview
+from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo
 
 # Serializers
 class ContentSectionSerializer(serializers.ModelSerializer):
@@ -57,3 +57,8 @@ class CustomerReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerReview
         fields = ['id', 'name', 'review', 'slug', 'created_at', 'order']
+        
+class SiteInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteInfo
+        fields = ['id', 'phone', 'email', 'address', 'hours']

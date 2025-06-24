@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview
+from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo
 
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
@@ -102,3 +102,13 @@ class CustomerReviewAdmin(admin.ModelAdmin):
     def review_preview(self, obj):
         return obj.review[:50] + ('...' if len(obj.review) > 50 else '')
     review_preview.short_description = 'Review'
+    
+@admin.register(SiteInfo)
+class SiteInfoAdmin(admin.ModelAdmin):
+    list_display = ['phone', 'email', 'hours']
+    fieldsets = (
+        (None, {'fields': ('phone', 'email', 'address', 'hours')}),
+    )
+    
+    def has_add_permission(self, request):
+        return not SiteInfo.objects.exists()

@@ -1,8 +1,8 @@
 # cars/views.py
 
 from rest_framework import generics, filters
-from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview
-from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer
+from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview,SiteInfo
+from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer,SiteInfoSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
@@ -72,3 +72,8 @@ class CustomerReviewListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['slug']
+    
+class SiteInfoListView(generics.ListAPIView):
+    queryset = SiteInfo.objects.all()
+    serializer_class = SiteInfoSerializer
+    permission_classes = [AllowAny]
