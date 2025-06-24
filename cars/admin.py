@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo
+from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo,AdUnit
 
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
@@ -112,3 +112,15 @@ class SiteInfoAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return not SiteInfo.objects.exists()
+    
+@admin.register(AdUnit)
+class AdUnitAdmin(admin.ModelAdmin):
+    list_display = ['name', 'page', 'is_active', 'updated_at']
+    list_filter = ['page', 'is_active']
+    search_fields = ['name', 'ad_slot']
+    prepopulated_fields = {'slug': ('name',)}
+    list_editable = ['is_active']
+    list_per_page = 20
+    fieldsets = (
+        (None, {'fields': ('name', 'ad_slot', 'page', 'is_active', 'slug')}),
+    )

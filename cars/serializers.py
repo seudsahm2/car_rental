@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo
+from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
 
 # Serializers
 class ContentSectionSerializer(serializers.ModelSerializer):
@@ -62,3 +62,8 @@ class SiteInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteInfo
         fields = ['id', 'phone', 'email', 'address', 'hours']
+    
+class AdUnitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdUnit
+        fields = ['id', 'name', 'ad_slot', 'page', 'is_active', 'slug', 'created_at', 'updated_at']

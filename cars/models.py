@@ -132,3 +132,24 @@ class SiteInfo(models.Model):
     
     def __str__(self):
         return "Site Information"
+
+class AdUnit(models.Model):
+    name = models.CharField(max_length=100)
+    ad_slot = models.CharField(max_length=50, blank=True, help_text="Google AdSense ad slot ID")
+    page = models.CharField(max_length=100, default='all', help_text="Page where ad appears, e.g., 'about', 'home', or 'all' for site-wide")
+    is_active = models.BooleanField(default=True)
+    slug = models.SlugField(unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+            counter = 1
+            while AdUnit.objects.filter(slug=self.slug).exists():
+                self.slug = f"{self.slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name

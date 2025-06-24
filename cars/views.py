@@ -1,8 +1,8 @@
 # cars/views.py
 
 from rest_framework import generics, filters
-from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview,SiteInfo
-from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer,SiteInfoSerializer
+from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
+from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer,SiteInfoSerializer,AdUnitSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
@@ -77,3 +77,17 @@ class SiteInfoListView(generics.ListAPIView):
     queryset = SiteInfo.objects.all()
     serializer_class = SiteInfoSerializer
     permission_classes = [AllowAny]
+    
+class AdUnitListView(generics.ListAPIView):
+    queryset = AdUnit.objects.filter(is_active=True)
+    serializer_class = AdUnitSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['page', 'slug']
+    
+def ads_txt_view(request):
+    publisher_id = settings.GOOGLE_ADSENSE_PUBLISHER_ID
+    if not publisher_id:
+        return HttpResponse("Publisher ID not configured", status=500)
+    content = f"google.com, {publisher_id}, DIRECT, f08c47fec0942fa0"
+    return HttpResponse(content, content_type='text/plain')

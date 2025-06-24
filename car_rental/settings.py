@@ -54,7 +54,9 @@ else:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
 
-
+# Google AdSense and Analytics
+GOOGLE_ADSENSE_PUBLISHER_ID = os.getenv('GOOGLE_ADSENSE_PUBLISHER_ID', '')
+GOOGLE_ANALYTICS_PROPERTY_ID = os.getenv('GOOGLE_ANALYTICS_PROPERTY_ID', '')
 
 # =================
 # APPLICATION CONFIG
@@ -195,8 +197,9 @@ REST_FRAMEWORK = {
 # CORS SETTINGS
 # =============
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://localhost:5173",
+    "https://sudocarreental.netlify.app",
 ] + [f"https://{host}" for host in ALLOWED_HOSTS if host != '*']
 CORS_ALLOW_CREDENTIALS = True
 
