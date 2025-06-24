@@ -100,3 +100,25 @@ class ContentSection(models.Model):
     
     def __str__(self):
         return self.title
+    
+class CustomerReview(models.Model):
+    name = models.CharField(max_length=100)
+    review = models.TextField()
+    slug = models.SlugField(unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+            counter = 1
+            while CustomerReview.objects.filter(slug=self.slug).exists():
+                self.slug = f"{self.slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name

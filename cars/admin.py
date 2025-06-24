@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection
+from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview
 
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
@@ -87,3 +87,18 @@ class ContentSectionAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {'fields': ('title', 'content', 'page', 'slug', 'order')}),
     )
+    
+@admin.register(CustomerReview)
+class CustomerReviewAdmin(admin.ModelAdmin):
+    list_display = ['name', 'review_preview', 'order']
+    search_fields = ['name', 'review']
+    prepopulated_fields = {'slug': ('name',)}
+    list_editable = ['order']
+    list_per_page = 20
+    fieldsets = (
+        (None, {'fields': ('name', 'review', 'slug', 'order')}),
+    )
+    
+    def review_preview(self, obj):
+        return obj.review[:50] + ('...' if len(obj.review) > 50 else '')
+    review_preview.short_description = 'Review'

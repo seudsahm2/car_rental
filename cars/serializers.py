@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection
+from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview
 
 # Serializers
 class ContentSectionSerializer(serializers.ModelSerializer):
@@ -52,3 +52,8 @@ class CarSerializer(serializers.ModelSerializer):
         if obj.image and hasattr(obj.image, 'url'):
             return request.build_absolute_uri(obj.image.url)
         return None
+
+class CustomerReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerReview
+        fields = ['id', 'name', 'review', 'slug', 'created_at', 'order']

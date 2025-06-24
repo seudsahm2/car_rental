@@ -21,9 +21,13 @@ SECRET_KEY = os.getenv('SECRET_KEY', DEFAULT_SECRET_KEY)
 
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
+DEV_HOSTS = ['localhost', '127.0.0.1']
+# Get additional hosts from environment (e.g., production domain or IP)
+ENV_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
+
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+    ALLOWED_HOSTS = list(set(DEV_HOSTS + ENV_HOSTS))
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000'] + [f"http://{host}" for host in ENV_HOSTS if host]
     # Security settings (relaxed in development)
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
@@ -36,8 +40,8 @@ if DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
 else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'your-server-ip-or-domain.com').split(',')
-    CSRF_TRUSTED_ORIGINS = [f'https://{host.strip()}' for host in ALLOWED_HOSTS if host.strip() != '*']
+    ALLOWED_HOSTS = list(set(ENV_HOSTS)) or ['car-rental-pi48.onrender.com']
+    CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host and host != '*'] + [f'http://{host}' for host in ALLOWED_HOSTS if host and host != '*']
     # Security settings (enforced in production)
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True

@@ -1,8 +1,8 @@
 # cars/views.py
 
 from rest_framework import generics, filters
-from .models import Car, CarCategory,FAQ,ContentSection
-from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer
+from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview
+from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
@@ -65,3 +65,10 @@ def create_admin(request):
         User.objects.create_superuser('seud', 'seudsahm1@gmail.com', '12345678')
         return HttpResponse("Admin user created")
     return HttpResponse("Admin user already exists")
+
+class CustomerReviewListView(generics.ListAPIView):
+    queryset = CustomerReview.objects.all()
+    serializer_class = CustomerReviewSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['slug']
