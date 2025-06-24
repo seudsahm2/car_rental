@@ -7,8 +7,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
 from django.contrib.auth.models import User
-from .utils.supabase_client import get_supabase_client
 # Views
+# C:\Users\hp\Downloads\Projects\Django\car_rental_backend\cars\views.py
+from rest_framework import generics, filters
+from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Car, CarCategory
+from .serializers import CarSerializer, CarCategorySerializer
+
 class CarListView(generics.ListAPIView):
     serializer_class = CarSerializer
     permission_classes = [AllowAny]
@@ -19,9 +25,7 @@ class CarListView(generics.ListAPIView):
     search_fields = ['make', 'model', 'description']
 
     def get_queryset(self):
-        supabase = get_supabase_client()
-        response = supabase.table('cars').select('*').execute()
-        return response.data  # Return Supabase data as queryset
+        return Car.objects.all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

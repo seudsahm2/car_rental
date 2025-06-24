@@ -16,12 +16,6 @@ class CarCategoryAdmin(admin.ModelAdmin):
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
     list_filter = ['name']
-    
-    fieldsets = (
-        (None, {
-            'fields': ('name', 'slug')
-        }),
-    )
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
@@ -47,34 +41,18 @@ class CarAdmin(admin.ModelAdmin):
         return "No Image"
     image_preview.short_description = 'Image'
 
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'image_path':
+            return forms.FileField(label='Image', required=False)
+        return super().formfield_for_dbfield(db_field, **kwargs)
+
     def save_model(self, request, obj, form, change):
         supabase = get_supabase_client()
-        if 'image_path' in form.changed_data:
-            image_file = form.cleaned_data['image_path']
-            if image_file:
-                file_name = f"{obj.slug}-{image_file.name}"
-                supabase.storage.from_('car-images').upload(file_name, image_file.read())
-                obj.image_path = file_name
-        # Save to Supabase
-        data = {
-            'make': obj.make,
-            'model': obj.model,
-            'year': obj.year,
-            'category_id': obj.category_id,
-            'daily_rate': float(obj.daily_rate),
-            'image_path': obj.image_path,
-            'description': obj.description,
-            'seats': obj.seats,
-            'insurance_included': obj.insurance_included,
-            'usdt_accepted': obj.usdt_accepted,
-            'whatsapp_deal': obj.whatsapp_deal,
-            'no_security_deposit': obj.no_security_deposit,
-            'slug': obj.slug,
-        }
-        if change:
-            supabase.table('cars').update(data).eq('id', obj.id).execute()
-        else:
-            supabase.table('cars').insert(data).execute()
+        if 'image_path' in form.changed_data and request.FILES.get('image_path'):
+            image_file = request.FILES['image_path']
+            file_name = f"{obj.slug}-{image_file.name}"
+            supabase.storage.from_('car-images').upload(file_name, image_file.read())
+            obj.image_path = file_name
         super().save_model(request, obj, form, change)
 
 @admin.register(FAQCategory)

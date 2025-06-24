@@ -36,8 +36,8 @@ class CarSerializer(serializers.ModelSerializer):
         ]
 
     def get_image_url(self, obj):
-        if obj.get('image_path'):
-            return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj['image_path']}"
+        if obj.image_path:
+            return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj.image_path}"
         return None
 
 class CustomerReviewSerializer(serializers.ModelSerializer):
