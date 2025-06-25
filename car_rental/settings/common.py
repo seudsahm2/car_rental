@@ -1,7 +1,3 @@
-"""
-Django settings for car_rental project.
-"""
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -10,53 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# ======================
-# SECURITY CONFIGURATION
-# ======================
-# Generate a proper secret key if not in environment
-DEFAULT_SECRET_KEY = 'django-insecure-' + os.urandom(50).hex()  # 50+ character random key
-SECRET_KEY = os.getenv('SECRET_KEY', DEFAULT_SECRET_KEY)
-
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
-
-DEV_HOSTS = ['localhost', '127.0.0.1']
-# Get additional hosts from environment (e.g., production domain or IP)
-ENV_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
-
-if DEBUG:
-    ALLOWED_HOSTS = list(set(DEV_HOSTS + ENV_HOSTS))
-    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000'] + [f"http://{host}" for host in ENV_HOSTS if host]
-    # Security settings (relaxed in development)
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-    SECURE_PROXY_SSL_HEADER = None
-    SECURE_HSTS_SECONDS = 0
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = False
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
-else:
-    ALLOWED_HOSTS = list(set(ENV_HOSTS)) or ['car-rental-pi48.onrender.com']
-    CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host and host != '*'] + [f'http://{host}' for host in ALLOWED_HOSTS if host and host != '*']
-    # Security settings (enforced in production)
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
-
-# Google AdSense and Analytics
-GOOGLE_ADSENSE_PUBLISHER_ID = os.getenv('GOOGLE_ADSENSE_PUBLISHER_ID', '')
-GOOGLE_ANALYTICS_PROPERTY_ID = os.getenv('GOOGLE_ANALYTICS_PROPERTY_ID', '')
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # =================
 # APPLICATION CONFIG
@@ -89,42 +39,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'car_rental.urls'
 WSGI_APPLICATION = 'car_rental.wsgi.application'
-
-# =============
-# DATABASE CONFIG
-# =============
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('DB_NAME', 'car_rental'),
-#         'USER': os.getenv('DB_USER', 'postgres'),
-#         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-#         'HOST': os.getenv('DB_HOST', 'localhost'),
-#         'PORT': os.getenv('DB_PORT', '5432'),
-#     }
-# }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('SUPABASE_DB_NAME', 'postgres'),
-        'USER': os.getenv('SUPABASE_DB_USER', 'seud'),
-        'PASSWORD': os.getenv('SUPABASE_DB_PASSWORD', '12345678'),
-        'HOST': os.getenv('SUPABASE_DB_HOST', 'aws-0-eu-north-1.pooler.supabase.com'),
-        'PORT': os.getenv('SUPABASE_DB_PORT', '6543'),
-    }
-}
-
-SUPABASE_URL = os.getenv('SUPABASE_URL', '')
-SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '')
-SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '')
 
 # ================
 # AUTHENTICATION
@@ -179,7 +93,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'debug': DEBUG,  # Explicitly tie to DEBUG setting
         },
     },
 ]
@@ -207,16 +120,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
-
-# =============
-# CORS SETTINGS
-# =============
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5173",
-    "https://sudocarreental.netlify.app",
-] + [f"https://{host}" for host in ALLOWED_HOSTS if host != '*']
-CORS_ALLOW_CREDENTIALS = True
 
 # =============
 # LOGGING & EMAIL
@@ -254,3 +157,8 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 # OTHER SETTINGS
 # =============
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Supabase Settings (used in serializers/admin)
+SUPABASE_URL = os.getenv('SUPABASE_URL', '')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '')
+SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '')

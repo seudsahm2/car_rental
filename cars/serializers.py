@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
 from django.conf import settings
+import os
 # Serializers
 class ContentSectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,7 +38,10 @@ class CarSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         if obj.image_path:
-            return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj.image_path}"
+            remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
+            if remote_db:
+                return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj.image_path}"
+            return f"{settings.MEDIA_URL}{obj.image_path}"
         return None
 
 class CustomerReviewSerializer(serializers.ModelSerializer):

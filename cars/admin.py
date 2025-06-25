@@ -4,6 +4,7 @@ from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerRe
 from .utils.supabase_client import get_supabase_client
 from django import forms
 from django.conf import settings
+import os
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
     model = FAQ
@@ -11,6 +12,7 @@ class FAQInline(admin.TabularInline):
     fields = ['question', 'answer', 'slug', 'order']
     prepopulated_fields = {'slug': ('question',)}
     ordering = ['order']
+# C:\Users\hp\Downloads\Projects\Django\car_rental_backend\cars\admin.py
 
 @admin.register(CarCategory)
 class CarCategoryAdmin(admin.ModelAdmin):
@@ -38,8 +40,16 @@ class CarAdmin(admin.ModelAdmin):
 
     def image_preview(self, obj):
         if obj.image_path:
-            return format_html('<img src="{}/storage/v1/object/public/car-images/{}" style="max-height: 100px;" />',
-                               settings.SUPABASE_URL, obj.image_path)
+            remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
+            if remote_db:
+                return format_html(
+                    '<img src="{}/storage/v1/object/public/car-images/{}" style="max-height: 100px;" />',
+                    settings.SUPABASE_URL, obj.image_path
+                )
+            return format_html(
+                '<img src="{}" style="max-height: 100px;" />',
+                f"{settings.MEDIA_URL}{obj.image_path}"
+            )
         return "No Image"
     image_preview.short_description = 'Image'
 
@@ -49,14 +59,19 @@ class CarAdmin(admin.ModelAdmin):
         return super().formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        supabase = get_supabase_client()
+        remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
         if 'image_path' in form.changed_data and request.FILES.get('image_path'):
             image_file = request.FILES['image_path']
             file_name = f"{obj.slug}-{image_file.name}"
-            supabase.storage.from_('car-images').upload(file_name, image_file.read())
+            if remote_db:
+                supabase = get_supabase_client()
+                supabase.storage.from_('car-images').upload(file_name, image_file.read())
+            else:
+                # Save to local filesystem
+                with open(os.path.join(settings.MEDIA_ROOT, file_name), 'wb') as f:
+                    f.write(image_file.read())
             obj.image_path = file_name
         super().save_model(request, obj, form, change)
-
 @admin.register(FAQCategory)
 class FAQCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
