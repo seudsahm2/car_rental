@@ -109,7 +109,9 @@ class CarAdmin(admin.ModelAdmin):
                                 with open(file_path, 'wb') as f:
                                     f.write(image_file.read())
                                 instance.image_path = file_name
-                        instance.save()@admin.register(FAQCategory)
+                        instance.save()
+                        
+@admin.register(FAQCategory)
 class FAQCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ['name']
