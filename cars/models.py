@@ -11,7 +11,7 @@ from django.utils.html import format_html
 
 class CarCategory(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -21,36 +21,54 @@ class CarCategory(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = "Car Categories"
+
+class Location(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
 class Car(models.Model):
     make = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     year = models.PositiveIntegerField()
-    category = models.ForeignKey(CarCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(CarCategory, on_delete=models.SET_NULL, null=True, related_name='cars')
     daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    image_path = models.CharField(max_length=255, blank=True, null=True)
+    monthly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    image_path = models.CharField(max_length=255, blank=True, null=True)  # Main image
     description = models.TextField(blank=True)
-    seats = models.PositiveIntegerField()
-    insurance_included = models.BooleanField(default=True)
-    usdt_accepted = models.BooleanField(default=True)
-    whatsapp_deal = models.BooleanField(default=True)
-    no_security_deposit = models.BooleanField(default=True)
-    slug = models.SlugField(unique=True, blank=True)
+    seats = models.PositiveIntegerField(default=4)
+    insurance_included = models.BooleanField(default=False)
+    usdt_accepted = models.BooleanField(default=False)
+    whatsapp_deal = models.BooleanField(default=False)
+    no_security_deposit = models.BooleanField(default=False)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    luggage_capacity = models.PositiveIntegerField(default=2, help_text="Number of luggage bags")
+    doors = models.PositiveIntegerField(default=2)
+    passengers = models.PositiveIntegerField(default=2, help_text="Number of passengers")
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2, default=3000.00)
+    mileage_limit = models.PositiveIntegerField(default=250, help_text="Daily mileage limit in km")
+    additional_km_rate = models.CharField(max_length=50, default="AED 5 – AED 30", help_text="Cost per additional km")
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(f"{self.make} {self.model} {self.year}")
-            self.slug = base_slug
-            counter = 1
-            while Car.objects.filter(slug=self.slug).exists():
-                self.slug = f"{base_slug}-{counter}"
-                counter += 1
+            self.slug = slugify(f"{self.make}-{self.model}-{self.year}")
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.make} {self.model} ({self.year})"
 
+class CarImage(models.Model):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='images')
+    image_path = models.CharField(max_length=255)
+    is_primary = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Image for {self.car}"
 class FAQCategory(models.Model):  # New model for FAQ categories
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)

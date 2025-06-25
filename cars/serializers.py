@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, CarCategory,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
+from .models import Car, CarCategory,CarImage,Location,FAQCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
 from django.conf import settings
 import os
 # Serializers
@@ -24,16 +24,39 @@ class CarCategorySerializer(serializers.ModelSerializer):
         model = CarCategory
         fields = ['id', 'name', 'slug']
 
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ['id', 'name', 'address']
+
+class CarImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CarImage
+        fields = ['id', 'image_url', 'is_primary']
+
+    def get_image_url(self, obj):
+        if obj.image_path:
+            remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
+            if remote_db:
+                return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj.image_path}"
+            return f"{settings.MEDIA_URL}{obj.image_path}"
+        return None
+
 class CarSerializer(serializers.ModelSerializer):
     category = CarCategorySerializer(read_only=True)
     image_url = serializers.SerializerMethodField()
+    images = CarImageSerializer(many=True, read_only=True)
+    related_cars = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
         fields = [
-            'id', 'make', 'model', 'year', 'category', 'daily_rate', 'image_url',
-            'description', 'seats', 'insurance_included', 'usdt_accepted',
-            'whatsapp_deal', 'no_security_deposit', 'slug', 'created_at'
+            'id', 'make', 'model', 'year', 'category', 'daily_rate', 'monthly_rate', 'image_url',
+            'description', 'seats', 'insurance_included', 'usdt_accepted', 'whatsapp_deal',
+            'no_security_deposit', 'slug', 'created_at', 'luggage_capacity', 'doors', 'passengers',
+            'security_deposit', 'mileage_limit', 'additional_km_rate', 'images', 'related_cars'
         ]
 
     def get_image_url(self, obj):
@@ -44,6 +67,9 @@ class CarSerializer(serializers.ModelSerializer):
             return f"{settings.MEDIA_URL}{obj.image_path}"
         return None
 
+    def get_related_cars(self, obj):
+        related = Car.objects.filter(category=obj.category).exclude(id=obj.id)[:3]
+        return CarSerializer(related, many=True, context=self.context).data
 class CustomerReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerReview

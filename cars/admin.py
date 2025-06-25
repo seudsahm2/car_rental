@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Car, CarCategory, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo,AdUnit
+from .models import Car, CarCategory,CarImage,Location, FAQ, FAQCategory,ContentSection,CustomerReview,SiteInfo,AdUnit
 from .utils.supabase_client import get_supabase_client
 from django import forms
 from django.conf import settings
@@ -19,7 +19,21 @@ class CarCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
-    list_filter = ['name']
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ['name', 'address']
+    search_fields = ['name']
+
+class CarImageInline(admin.TabularInline):
+    model = CarImage
+    extra = 1
+    fields = ['image_path', 'is_primary']
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'image_path':
+            return forms.FileField(label='Image', required=False)
+        return super().formfield_for_dbfield(db_field, **kwargs)
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
@@ -28,12 +42,13 @@ class CarAdmin(admin.ModelAdmin):
     search_fields = ['make', 'model', 'description']
     prepopulated_fields = {'slug': ('make', 'model', 'year')}
     list_editable = ['daily_rate', 'no_security_deposit', 'whatsapp_deal']
-    list_per_page = 20
+    inlines = [CarImageInline]
 
     fieldsets = (
-        (None, {'fields': ('make', 'model', 'year', 'category', 'daily_rate', 'slug')}),
-        ('Details', {'fields': ('description', 'seats', 'image_path')}),
+        (None, {'fields': ('make', 'model', 'year', 'category', 'daily_rate', 'monthly_rate', 'slug')}),
+        ('Details', {'fields': ('description', 'seats', 'luggage_capacity', 'doors', 'passengers', 'image_path')}),
         ('Features', {'fields': ('insurance_included', 'usdt_accepted', 'whatsapp_deal', 'no_security_deposit')}),
+        ('Pricing', {'fields': ('security_deposit', 'mileage_limit', 'additional_km_rate')}),
     )
 
     readonly_fields = ['image_preview']
@@ -55,7 +70,7 @@ class CarAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         if db_field.name == 'image_path':
-            return forms.FileField(label='Image', required=False)
+            return forms.FileField(label='Main Image', required=False)
         return super().formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
@@ -67,7 +82,6 @@ class CarAdmin(admin.ModelAdmin):
                 supabase = get_supabase_client()
                 supabase.storage.from_('car-images').upload(file_name, image_file.read())
             else:
-                # Save to local filesystem
                 with open(os.path.join(settings.MEDIA_ROOT, file_name), 'wb') as f:
                     f.write(image_file.read())
             obj.image_path = file_name

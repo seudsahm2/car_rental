@@ -1,8 +1,8 @@
 # cars/views.py
 
 from rest_framework import generics, filters
-from .models import Car, CarCategory,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
-from .serializers import CarSerializer, CarCategorySerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer,SiteInfoSerializer,AdUnitSerializer
+from .models import Car, CarCategory,Location,FAQ,ContentSection,CustomerReview,SiteInfo,AdUnit
+from .serializers import CarSerializer, CarCategorySerializer, CarCategorySerializer, LocationSerializer, FAQSerializer, ContentSectionSerializer,CustomerReviewSerializer,SiteInfoSerializer,AdUnitSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
@@ -32,10 +32,21 @@ class CarListView(generics.ListAPIView):
         context['request'] = self.request
         return context
 
+class CarDetailView(generics.RetrieveAPIView):
+    serializer_class = CarSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'slug'
+    queryset = Car.objects.all()
+
 class CarCategoryListView(generics.ListAPIView):
-    queryset = CarCategory.objects.all()
     serializer_class = CarCategorySerializer
     permission_classes = [AllowAny]
+    queryset = CarCategory.objects.all()
+
+class LocationListView(generics.ListAPIView):
+    serializer_class = LocationSerializer
+    permission_classes = [AllowAny]
+    queryset = Location.objects.all()
 
 class FAQListView(generics.ListAPIView):
     serializer_class = FAQSerializer
