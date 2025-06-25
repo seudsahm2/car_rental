@@ -12,8 +12,6 @@ class FAQInline(admin.TabularInline):
     fields = ['question', 'answer', 'slug', 'order']
     prepopulated_fields = {'slug': ('question',)}
     ordering = ['order']
-# C:\Users\hp\Downloads\Projects\Django\car_rental_backend\cars\admin.py
-
 @admin.register(CarCategory)
 class CarCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
@@ -81,12 +79,37 @@ class CarAdmin(admin.ModelAdmin):
             if remote_db:
                 supabase = get_supabase_client()
                 supabase.storage.from_('car-images').upload(file_name, image_file.read())
+                obj.image_path = file_name
             else:
-                with open(os.path.join(settings.MEDIA_ROOT, file_name), 'wb') as f:
+                os.makedirs(settings.MEDIA_ROOT, exist_ok=True)  # Create media directory if it doesn't exist
+                file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+                with open(file_path, 'wb') as f:
                     f.write(image_file.read())
-            obj.image_path = file_name
+                obj.image_path = file_name
         super().save_model(request, obj, form, change)
-@admin.register(FAQCategory)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
+        for formset in formsets:
+            if formset.model == CarImage:
+                for form in formset:
+                    if form.cleaned_data and form.cleaned_data.get('image_path'):
+                        image_file = form.cleaned_data['image_path']
+                        instance = form.instance
+                        if isinstance(image_file, forms.FileField) or hasattr(image_file, 'read'):
+                            file_name = f"{instance.car.slug}-inline-{image_file.name}"
+                            if remote_db:
+                                supabase = get_supabase_client()
+                                supabase.storage.from_('car-images').upload(file_name, image_file.read())
+                                instance.image_path = file_name
+                            else:
+                                os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+                                file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+                                with open(file_path, 'wb') as f:
+                                    f.write(image_file.read())
+                                instance.image_path = file_name
+                        instance.save()@admin.register(FAQCategory)
 class FAQCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ['name']
