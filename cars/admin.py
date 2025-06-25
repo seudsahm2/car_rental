@@ -5,6 +5,9 @@ from .utils.supabase_client import get_supabase_client
 from django import forms
 from django.conf import settings
 import os
+import logging
+import time
+from django.core.exceptions import ValidationError
 # Inline for FAQs under FAQCategory
 class FAQInline(admin.TabularInline):
     model = FAQ
@@ -12,6 +15,15 @@ class FAQInline(admin.TabularInline):
     fields = ['question', 'answer', 'slug', 'order']
     prepopulated_fields = {'slug': ('question',)}
     ordering = ['order']
+
+logging.getLogger('supabase').setLevel(logging.WARNING)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+
+def validate_file_size(file, max_size=5*1024*1024):  # 5MB limit
+    if file.size > max_size:
+        raise ValidationError(f"File size must be under {max_size/(1024*1024)}MB")
+
 @admin.register(CarCategory)
 class CarCategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
@@ -30,7 +42,9 @@ class CarImageInline(admin.TabularInline):
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         if db_field.name == 'image_path':
-            return forms.FileField(label='Image', required=False)
+            field = forms.FileField(label='Image', required=False)
+            field.validators.append(validate_file_size)
+            return field
         return super().formfield_for_dbfield(db_field, **kwargs)
 
 @admin.register(Car)
@@ -68,23 +82,29 @@ class CarAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         if db_field.name == 'image_path':
-            return forms.FileField(label='Main Image', required=False)
+            field = forms.FileField(label='Main Image', required=False)
+            field.validators.append(validate_file_size)
+            return field
         return super().formfield_for_dbfield(db_field, **kwargs)
 
     def save_model(self, request, obj, form, change):
         remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
         if 'image_path' in form.changed_data and request.FILES.get('image_path'):
             image_file = request.FILES['image_path']
-            file_name = f"{obj.slug}-{image_file.name}"
+            # Generate unique file name with timestamp
+            timestamp = int(time.time())
+            file_name = f"{obj.slug}-{timestamp}-{image_file.name}"
             if remote_db:
                 supabase = get_supabase_client()
-                supabase.storage.from_('car-images').upload(file_name, image_file.read())
+                image_data = image_file.read()
+                supabase.storage.from_('car-images').upload(file_name, image_data, file_options={'content-type': image_file.content_type})
                 obj.image_path = file_name
             else:
-                os.makedirs(settings.MEDIA_ROOT, exist_ok=True)  # Create media directory if it doesn't exist
+                os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
                 file_path = os.path.join(settings.MEDIA_ROOT, file_name)
                 with open(file_path, 'wb') as f:
-                    f.write(image_file.read())
+                    for chunk in image_file.chunks():
+                        f.write(chunk)
                 obj.image_path = file_name
         super().save_model(request, obj, form, change)
 
@@ -97,19 +117,23 @@ class CarAdmin(admin.ModelAdmin):
                     if form.cleaned_data and form.cleaned_data.get('image_path'):
                         image_file = form.cleaned_data['image_path']
                         instance = form.instance
-                        if isinstance(image_file, forms.FileField) or hasattr(image_file, 'read'):
-                            file_name = f"{instance.car.slug}-inline-{image_file.name}"
+                        if hasattr(image_file, 'read'):
+                            # Generate unique file name with timestamp
+                            timestamp = int(time.time())
+                            file_name = f"{instance.car.slug}-inline-{timestamp}-{image_file.name}"
                             if remote_db:
                                 supabase = get_supabase_client()
-                                supabase.storage.from_('car-images').upload(file_name, image_file.read())
+                                image_data = image_file.read()
+                                supabase.storage.from_('car-images').upload(file_name, image_data, file_options={'content-type': image_file.content_type})
                                 instance.image_path = file_name
                             else:
                                 os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
                                 file_path = os.path.join(settings.MEDIA_ROOT, file_name)
                                 with open(file_path, 'wb') as f:
-                                    f.write(image_file.read())
+                                    for chunk in image_file.chunks():
+                                        f.write(chunk)
                                 instance.image_path = file_name
-                        instance.save()
+                            instance.save()
                         
 @admin.register(FAQCategory)
 class FAQCategoryAdmin(admin.ModelAdmin):
