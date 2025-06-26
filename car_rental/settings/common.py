@@ -23,6 +23,13 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'cars',
+    'content',
+    'core',
+    'deals',
+    'fleet',
+    'locations',
+    'people',
+    'sales'
 ]
 
 MIDDLEWARE = [
