@@ -52,6 +52,7 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/car-images/"
 # CORS SETTINGS
 # =============
 CORS_ALLOWED_ORIGINS = [
+    "https://sudocarreental.netlify.app",
     "https://clever-horse-62e8a4.netlify.app",
 ] + [f"https://{host}" for host in ALLOWED_HOSTS if host != '*']
 CORS_ALLOW_CREDENTIALS = True
