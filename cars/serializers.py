@@ -69,7 +69,27 @@ class CarSerializer(serializers.ModelSerializer):
 
     def get_related_cars(self, obj):
         related = Car.objects.filter(category=obj.category).exclude(id=obj.id)[:3]
-        return CarSerializer(related, many=True, context=self.context).data
+        # Use the lightweight serializer here
+        return RelatedCarSerializer(related, many=True, context=self.context).data
+
+    
+class RelatedCarSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Car
+        fields = [
+            'id', 'make', 'model', 'year', 'image_url', 'daily_rate', 'slug'
+        ]
+
+    def get_image_url(self, obj):
+        if obj.image_path:
+            remote_db = os.getenv('REMOTE_DB', 'False').lower() in ('true', '1', 'yes')
+            if remote_db:
+                return f"{settings.SUPABASE_URL}/storage/v1/object/public/car-images/{obj.image_path}"
+            return f"{settings.MEDIA_URL}{obj.image_path}"
+        return None
+
 class CustomerReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerReview
