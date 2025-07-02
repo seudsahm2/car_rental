@@ -1,14 +1,17 @@
-// static/admin/js/image_radio_fix.js
-
 document.addEventListener('DOMContentLoaded', function () {
-    const updateRadioNames = () => {
+    const enforceSingleSelection = () => {
         const radios = document.querySelectorAll('input[name$="-is_primary"]');
         radios.forEach(radio => {
-            radio.setAttribute('name', 'primary_image'); // make all share one group
+            radio.addEventListener('change', () => {
+                radios.forEach(otherRadio => {
+                    if (otherRadio !== radio) {
+                        otherRadio.checked = false;
+                    }
+                });
+            });
         });
     };
 
-    updateRadioNames(); // initial load
-
-    document.addEventListener('formset:added', updateRadioNames); // dynamic forms
+    enforceSingleSelection();
+    document.addEventListener('formset:added', enforceSingleSelection);
 });
