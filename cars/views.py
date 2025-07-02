@@ -22,7 +22,19 @@ class CarListView(generics.ListAPIView):
     filterset_fields = ['category__slug', 'make', 'year']
     ordering_fields = ['daily_rate', 'year', 'make', 'created_at']
     ordering = ['-created_at']
-    search_fields = ['make', 'model', 'description']
+    search_fields = [
+        'make',                        # brand like "Toyota"
+        'model',                       # model like "Corolla"
+        'description',                 # text description
+        'additional_km_rate',          # text field e.g., "AED 5 – AED 30"
+        'seats',                       # number of seats
+        'doors',                       # number of doors
+        'passengers',                  # number of passengers
+        'luggage_capacity',            # number of luggage bags
+        'security_deposit',            # amount as text
+        'category__name',              # car category name
+        'category__slug',              # car category slug
+    ]
 
     def get_queryset(self):
         return Car.objects.all()
